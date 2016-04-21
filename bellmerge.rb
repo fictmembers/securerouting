@@ -1,3 +1,18 @@
+###                       UNIQUE PATHFINDER PROGRAM                           ##
+# Developed to improve routing security in computers network.
+
+# Finds unique routes in non-oriented graph.
+# It uses tree different ways to find unique ways:
+#  - Modified Bellman-Fords algorithm
+#  - Ants algorithm
+#  - Custom wave algorithm
+
+# There are two variants of tasks:
+# - to find as much way as we can without looking on their costs
+# - to find set of unique paths whith have lowest cost
+# First two algorithm solve first described task, and third algorith is
+# trying to solve second problem. 
+
 module BellmanFord
   INF = Float::INFINITY
 
@@ -126,8 +141,30 @@ module PathFinder
   end
 end
 
+module WaveAlgorithm
+end
+
+
+
+
+
+
+
+
+
 class Edge
+
+  # Class-wrapper for edge of graph
+
+  # Description of attributes
+
+  # a - Start point of edge
+  # b - Finish point of edge
+  # cost - Cost of current edge
+  # line - Object of drawing
+
   attr_accessor :a, :b, :cost, :line
+
   def initialize(from, to, cost, app)
     self.a = from.to_i - 1
     self.b = to.to_i - 1
@@ -136,12 +173,16 @@ class Edge
     @app = app
   end
 
+  # Draw regular line on the map
+
   def draw(from, to)
     @app.stroke @app.black
     @line = @app.line from.y + 35, from.x + 16, to.y + 35, to.x + 16
     @weight = @app.para self.cost
     @weight.move (from.y + to.y + 70) / 2, (from.x + to.x + 32) / 2
   end
+
+  # Highlight the edge
 
   def highlight(from, to, color)
     @app.stroke color
@@ -150,10 +191,14 @@ class Edge
     @weight.move from.y/2 + to.y/2 + 35, from.x/2 + to.x/2 + 16
   end
 
+  # Hide edge
+
   def hide
     @line.hide
     @weight.hide
   end
+
+  # Show edge
 
   def apear
     @line.show
@@ -250,14 +295,19 @@ class Information
       end
     end
   end
+
 end
 
 Shoes.app do
-  initials = Information.new(self)
-  background white
-  @set_of_unique_routes = []
+  initials = Information.new(self)                                              # Initializing of support class
+  background white                                                              # Set up main background
 
+  @set_of_unique_routes = []                                                    # Initializing of array for storring unique ways
+
+  # Main toolbox
   flow :width => 1.0 do
+
+    # Open file button
     background rgb(221, 221, 221)
     stack :width => 0.5 do
       flow do
@@ -265,6 +315,8 @@ Shoes.app do
         @opened_file = para " - "
       end
     end
+
+    # Statistics
     stack :width => 0.5 do
       flow do
         caption "General: "
@@ -275,6 +327,7 @@ Shoes.app do
       end
     end
   end
+
 
   stack :width => 0.7 do
     @button_open_file.click do
@@ -305,6 +358,8 @@ Shoes.app do
         @process_button = button "Search"
         @restore_graph_button = button "Restore"
 
+        # Restoring graph to its first state on the map
+
         @restore_graph_button.click do
           @connections.each { |connection| connection.hide }
           @result.clear
@@ -316,6 +371,9 @@ Shoes.app do
         para "Results"
         @result = stack { para "-" }
       end
+
+
+      # This button starts proccess of finding unique routes
 
       @process_button.click do
         @result.clear
