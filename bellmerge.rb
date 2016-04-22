@@ -11,7 +11,7 @@
 # - to find as much way as we can without looking on their costs
 # - to find set of unique paths whith have lowest cost
 # First two algorithm solve first described task, and third algorith is
-# trying to solve second problem. 
+# trying to solve second problem.
 
 module BellmanFord
   INF = Float::INFINITY
@@ -137,7 +137,7 @@ module PathFinder
         end
       end
     end
-    return path_costs ,set
+    return path_costs, set
   end
 end
 
