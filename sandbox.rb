@@ -137,15 +137,6 @@ module WaveAlgorithm
     e.each do |edge|
       founded_edges << edge.b if edge.a == s && !u.include?(edge.b)
     end
-
-    # Check are there any daed ends in next hops
-
-    # Final vertex IS NOT dead end, so skip it
-    # New vertexes MUST have another connection.
-    # No back connection to start vertex, and it's MUSTN't be used vertex
-
-
-
     founded_edges
   end
 
@@ -186,21 +177,23 @@ module WaveAlgorithm
     return min, path_index
   end
 
-  def self.search(n, m, e, v, t)
-    v -= 1                                                                      # Normalize vertexes
-    t -= 1                                                                      # Start from vertex №0
+  def self.search(e, v, t)
+    v -= 1  # Normalize vertexes
+    t -= 1  # Start from vertex №0
 
-    pathes_available = true
-    completed_pathes = []
+    pathes_available = true # Trigger to exit searching
 
-    used_vertexes = [v]                                                         # Visited vertexes
-    start_vertexes = WaveAlgorithm.count_edges_whith_starts_from(v, e, used_vertexes, t)  # Search neighbours to start vertex
+    completed_pathes = []   # Full pathes from source to destination
+    process_pathes = []     # Array of cumulative pathes
 
-    process_pathes = []
+    used_vertexes = [v]     # Visited vertexes
+    start_vertexes = count_edges_whith_starts_from(v, e, used_vertexes, t)  # Search neighbours to start vertex
+
+    # Start waving from first vertex (v)
     start_vertexes.each do |neighbour|
+      # Complete path if there is direct connection
       if neighbour == t
         completed_pathes << [v, neighbour]
-        puts "DIRECT CONNECTION HAS BEEN FOUND!"
       else
         process_pathes << [v, neighbour]
         used_vertexes << neighbour
@@ -208,77 +201,61 @@ module WaveAlgorithm
     end
 
     while pathes_available
-      pathes = process_pathes.dup
-      process_pathes.clear
+      pathes = process_pathes.dup             # Clone already found pathes to proceed
+      process_pathes.clear                    # Clear pathes
 
-      for i in 0..pathes.count - 1                                              # Iterate throw all first found pathes
-        available_connections = []
+      for i in 0..pathes.count - 1            # Iterate throw all first found pathes
+                                                # Number of pathes cannot be more than neaighbours of start vertex
 
-        pathes.each do |path|                                                   # Search outgoing vertexes for each path
-          available_connections << WaveAlgorithm.count_edges_whith_starts_from(path.last, e, used_vertexes, t)
+        available_connections = []            # Array of arrays with next vertexes for waving
+        pathes.each do |path|                   # Search outgoing vertexes for each path
+          available_connections << count_edges_whith_starts_from(
+                                                path.last, e, used_vertexes, t)
         end
 
-        puts "available_connections = #{available_connections}"
-        a = gets
+        min, path_index = min_number_of_neighbours(available_connections) # Search for a vertex with less connections
 
-        min, path_index = WaveAlgorithm.min_number_of_neighbours(available_connections)
-
-        puts "Calculate for path #{path_index} -  #{pathes[path_index]}. Number of outgoing edges is #{min}"
-
-        if min == 0
-          puts "Path #{pathes[path_index]} killed cause it had dead end!"
-          pathes.delete_at(path_index)
+        if min == 0  # If value of connections is 0 - it's the Dead End
+          pathes.delete_at(path_index)  # Don't maintain it anymore!
           next
         else
-          used_vertexes << pathes[path_index].last
-          puts "Vertex (#{pathes[path_index].last}) is looking for a neighbour from #{available_connections[path_index]}"
-          new_path_head = available_connections[path_index].first
+          used_vertexes << pathes[path_index].last # Add current point to control
+          new_path_head = available_connections[path_index].first # Get all available sons for current node
 
-          # What is going on:
-          # => Find smallest path from founded vertexes
-          # => Is current vetrex - finish vertex
           available_connections[path_index].each do |candidate_vertex|
-            puts "(#{pathes[path_index].last}) Candidate: (#{candidate_vertex}), Head: (#{new_path_head})"
+            # Check is next vertex final
             if candidate_vertex == t
-              puts "OVERRIDE: FINAL VERTEX"
+              # If yes - override and stop looking at other!
               new_path_head = candidate_vertex
               break
             end
-            if self.where_edge(pathes[path_index].last, candidate_vertex, e) < self.where_edge(pathes[path_index].last, new_path_head, e)
-              puts "Checked"
+
+            # Look for the best candiadte
+            if (where_edge(pathes[path_index].last, candidate_vertex, e) <
+                          where_edge(pathes[path_index].last, new_path_head, e))
               new_path_head = candidate_vertex
             end
           end
 
-          # => Add to path
-          pathes[path_index] << new_path_head
-          puts "New path is #{pathes[path_index]}"
+          pathes[path_index] << new_path_head # Add founded head to path
 
           if new_path_head != t
-            # => Mark as visited
             used_vertexes << new_path_head
-            puts "Used vertexes are #{used_vertexes}"
-            process_pathes << pathes[path_index] if min != 0
+            process_pathes << pathes[path_index]
           else
-            # => Check is this vertex is final
             completed_pathes << pathes[path_index]
-            puts "Complete path found!"
           end
 
           pathes.delete_at(path_index)
         end
 
-        pathes_available = false if process_pathes.count == 0
-      end
-
-      process_pathes.each do |path|
-        puts "Cost of #{path} is: #{WaveAlgorithm.paths_cost(path, e)}"
+        pathes_available = false if process_pathes.count == 0   # Try to escape
       end
     end
 
     cost = []
     completed_pathes.each do |path|
-      cost << WaveAlgorithm.paths_cost(path, e)
+      cost << paths_cost(path, e)
     end
 
     return cost, completed_pathes
@@ -302,11 +279,6 @@ def read_file(file_name)
     edges << Edge.new(edge[1], edge[0], edge[2])
   end
 
-  puts "Number of edges #{edges.count}"
-  edges.each do |edge|
-    puts "Edge: #{edge.a + 1} - #{edge.b + 1}: #{edge.cost}"
-  end
-
   return n, m, edges
 end
 
@@ -322,9 +294,9 @@ loop do
 
   n, m, e = read_file('input_simple.txt')
 
-  costs, ways = WaveAlgorithm.search(n, m, e, v.to_i, t.to_i)
+  costs, ways = WaveAlgorithm.search(e, v.to_i, t.to_i)
 
-  costs.each_with_index do |cost, index|
-    puts "Path #{index}: #{ways[index]}, cost: #{cost}"
+  ways.each_with_index do |way, index|
+    puts "Path #{index} #{way} has cost #{costs[index]}"
   end
 end
