@@ -198,8 +198,13 @@ module WaveAlgorithm
 
     process_pathes = []
     start_vertexes.each do |neighbour|
-      process_pathes << [v, neighbour]
-      used_vertexes << neighbour
+      if neighbour == t
+        completed_pathes << [v, neighbour]
+        puts "DIRECT CONNECTION HAS BEEN FOUND!"
+      else
+        process_pathes << [v, neighbour]
+        used_vertexes << neighbour
+      end
     end
 
     while pathes_available
@@ -231,9 +236,14 @@ module WaveAlgorithm
 
           # What is going on:
           # => Find smallest path from founded vertexes
-
+          # => Is current vetrex - finish vertex
           available_connections[path_index].each do |candidate_vertex|
             puts "(#{pathes[path_index].last}) Candidate: (#{candidate_vertex}), Head: (#{new_path_head})"
+            if candidate_vertex == t
+              puts "OVERRIDE: FINAL VERTEX"
+              new_path_head = candidate_vertex
+              break
+            end
             if self.where_edge(pathes[path_index].last, candidate_vertex, e) < self.where_edge(pathes[path_index].last, new_path_head, e)
               puts "Checked"
               new_path_head = candidate_vertex
