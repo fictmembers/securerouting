@@ -201,6 +201,7 @@ module WaveAlgorithm
     end
 
     while pathes_available
+      pathes_available = false if process_pathes.count == 0   # Try to escape
       pathes = process_pathes.dup             # Clone already found pathes to proceed
       process_pathes.clear                    # Clear pathes
 
@@ -248,8 +249,6 @@ module WaveAlgorithm
 
           pathes.delete_at(path_index)
         end
-
-        pathes_available = false if process_pathes.count == 0   # Try to escape
       end
     end
 
