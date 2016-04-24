@@ -132,11 +132,20 @@ end
 
 module WaveAlgorithm
   # Count edges that started from start (s) point in array of edges (e)
-  def self.count_edges_whith_starts_from(s, e, u)
+  def self.count_edges_whith_starts_from(s, e, u, t)
     founded_edges = []
     e.each do |edge|
       founded_edges << edge.b if edge.a == s && !u.include?(edge.b)
     end
+
+    # Check are there any daed ends in next hops
+
+    # Final vertex IS NOT dead end, so skip it
+    # New vertexes MUST have another connection.
+    # No back connection to start vertex, and it's MUSTN't be used vertex
+
+
+
     founded_edges
   end
 
@@ -144,6 +153,13 @@ module WaveAlgorithm
   def self.where_edge(a, b, e)
     e.each do |edge|
       return edge.cost if edge.a == a && edge.b == b
+    end
+  end
+
+  # Get cost of edge where a -start and b - end
+  def self.is_edge_exists(a, b, e)
+    e.each do |edge|
+      return true if edge.a == a && edge.b == b
     end
   end
 
@@ -178,7 +194,7 @@ module WaveAlgorithm
     completed_pathes = []
 
     used_vertexes = [v]                                                         # Visited vertexes
-    start_vertexes = WaveAlgorithm.count_edges_whith_starts_from(v, e, used_vertexes)  # Search neighbours to start vertex
+    start_vertexes = WaveAlgorithm.count_edges_whith_starts_from(v, e, used_vertexes, t)  # Search neighbours to start vertex
 
     process_pathes = []
     start_vertexes.each do |neighbour|
@@ -194,7 +210,7 @@ module WaveAlgorithm
         available_connections = []
 
         pathes.each do |path|                                                   # Search outgoing vertexes for each path
-          available_connections << WaveAlgorithm.count_edges_whith_starts_from(path.last, e, used_vertexes)
+          available_connections << WaveAlgorithm.count_edges_whith_starts_from(path.last, e, used_vertexes, t)
         end
 
         puts "available_connections = #{available_connections}"
@@ -207,6 +223,7 @@ module WaveAlgorithm
         if min == 0
           puts "Path #{pathes[path_index]} killed cause it had dead end!"
           pathes.delete_at(path_index)
+          next
         else
           used_vertexes << pathes[path_index].last
           puts "Vertex (#{pathes[path_index].last}) is looking for a neighbour from #{available_connections[path_index]}"
@@ -231,7 +248,7 @@ module WaveAlgorithm
             # => Mark as visited
             used_vertexes << new_path_head
             puts "Used vertexes are #{used_vertexes}"
-            process_pathes << pathes[path_index]
+            process_pathes << pathes[path_index] if min != 0
           else
             # => Check is this vertex is final
             completed_pathes << pathes[path_index]
@@ -241,7 +258,7 @@ module WaveAlgorithm
           pathes.delete_at(path_index)
         end
 
-        pathes_available = false if (used_vertexes.count == m || completed_pathes.count == start_vertexes.count)
+        pathes_available = false if process_pathes.count == 0
       end
 
       process_pathes.each do |path|
@@ -272,9 +289,15 @@ def read_file(file_name)
 
   collector.each do |edge|
     edges << Edge.new(edge[0], edge[1], edge[2])
+    edges << Edge.new(edge[1], edge[0], edge[2])
   end
 
-  [n, m, edges]
+  puts "Number of edges #{edges.count}"
+  edges.each do |edge|
+    puts "Edge: #{edge.a + 1} - #{edge.b + 1}: #{edge.cost}"
+  end
+
+  return n, m, edges
 end
 
 v = 0 # Start point
