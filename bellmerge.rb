@@ -141,16 +141,144 @@ module PathFinder
   end
 end
 
+
 module WaveAlgorithm
+
+  # Modified Wave Algorithm
+
+  # Greedy algorithm that tries to
+  # finf all pathes in graph and
+  # it is doing in the same time
+
+  # Count edges that started from start (s) point in array of edges (e)
+  def self.count_edges_whith_starts_from(s, e, u, t)
+    founded_edges = []
+    e.each do |edge|
+      founded_edges << edge.b if edge.a == s && !u.include?(edge.b)
+    end
+    founded_edges
+  end
+
+  # Get cost of edge where a -start and b - end
+  def self.where_edge(a, b, e)
+    e.each do |edge|
+      return edge.cost if edge.a == a && edge.b == b
+    end
+  end
+
+  # Get cost of edge where a -start and b - end
+  def self.is_edge_exists(a, b, e)
+    e.each do |edge|
+      return true if edge.a == a && edge.b == b
+    end
+  end
+
+  # Get cost of current path
+  def self.paths_cost(path, e)
+    cost = 0
+    for i in 0..path.count - 2
+      cost += WaveAlgorithm.where_edge(path[i], path[i + 1], e)
+    end
+    cost
+  end
+
+  # Look for a vertex with smallest number of outgoing connections
+  def self.min_number_of_neighbours(available_connections)
+    min = available_connections.first.count
+    path_index = 0
+
+    available_connections.each_with_index do |next_vertexes, index|
+      if next_vertexes.count < min
+        min = next_vertexes.count
+        path_index = index
+      end
+    end
+    return min, path_index
+  end
+
+  def self.search(e, v, t)
+    v -= 1  # Normalize vertexes
+    t -= 1  # Start from vertex №0
+
+    pathes_available = true # Trigger to exit searching
+
+    completed_pathes = []   # Full pathes from source to destination
+    process_pathes = []     # Array of cumulative pathes
+
+    used_vertexes = [v]     # Visited vertexes
+    start_vertexes = count_edges_whith_starts_from(v, e, used_vertexes, t)  # Search neighbours to start vertex
+
+    # Start waving from first vertex (v)
+    start_vertexes.each do |neighbour|
+      # Complete path if there is direct connection
+      if neighbour == t
+        completed_pathes << [v, neighbour]
+      else
+        process_pathes << [v, neighbour]
+        used_vertexes << neighbour
+      end
+    end
+
+    while pathes_available
+      pathes_available = false if process_pathes.count == 0   # Try to escape
+      pathes = process_pathes.dup             # Clone already found pathes to proceed
+      process_pathes.clear                    # Clear pathes
+
+      for i in 0..pathes.count - 1            # Iterate throw all first found pathes
+                                                # Number of pathes cannot be more than neaighbours of start vertex
+
+        available_connections = []            # Array of arrays with next vertexes for waving
+        pathes.each do |path|                   # Search outgoing vertexes for each path
+          available_connections << count_edges_whith_starts_from(
+                                                path.last, e, used_vertexes, t)
+        end
+
+        min, path_index = min_number_of_neighbours(available_connections) # Search for a vertex with less connections
+
+        if min == 0  # If value of connections is 0 - it's the Dead End
+          pathes.delete_at(path_index)  # Don't maintain it anymore!
+          next
+        else
+          used_vertexes << pathes[path_index].last # Add current point to control
+          new_path_head = available_connections[path_index].first # Get all available sons for current node
+
+          available_connections[path_index].each do |candidate_vertex|
+            # Check is next vertex final
+            if candidate_vertex == t
+              # If yes - override and stop looking at other!
+              new_path_head = candidate_vertex
+              break
+            end
+
+            # Look for the best candiadte
+            if (where_edge(pathes[path_index].last, candidate_vertex, e) <
+                          where_edge(pathes[path_index].last, new_path_head, e))
+              new_path_head = candidate_vertex
+            end
+          end
+
+          pathes[path_index] << new_path_head # Add founded head to path
+
+          if new_path_head != t
+            used_vertexes << new_path_head
+            process_pathes << pathes[path_index]
+          else
+            completed_pathes << pathes[path_index]
+          end
+
+          pathes.delete_at(path_index)
+        end
+      end
+    end
+
+    cost = []
+    completed_pathes.each do |path|
+      cost << paths_cost(path, e)
+    end
+
+    return cost, completed_pathes
+  end
 end
-
-
-
-
-
-
-
-
 
 class Edge
 
@@ -270,6 +398,7 @@ class Information
 
     for i in 0..m - 1
        connections << Edge.new(collector[i][0], collector[i][1], collector[i][2], @app)
+       connections << Edge.new(collector[i][1], collector[i][0], collector[i][2], @app)
     end
 
     collector.shift(m)
@@ -382,8 +511,12 @@ Shoes.app do
         else
           @connections.each { |connection| connection.hide }
           connections = @connections.clone
-          @costs, @set_of_unique_routes = PathFinder.unique_routes(@routers.size,
-                                                          connections,
+          #@costs, @set_of_unique_routes = PathFinder.unique_routes(@routers.size,
+          #                                                connections,
+          #                                                @start_vertex.text.to_i,
+          #                                                @finish_vertex.text.to_i)
+
+          @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
                                                           @start_vertex.text.to_i,
                                                           @finish_vertex.text.to_i)
 

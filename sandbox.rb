@@ -131,6 +131,7 @@ module PathFinder
 end
 
 module WaveAlgorithm
+
   # Count edges that started from start (s) point in array of edges (e)
   def self.count_edges_whith_starts_from(s, e, u, t)
     founded_edges = []
