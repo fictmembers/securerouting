@@ -15,7 +15,7 @@
 
 module AntAlgorithm
   def self.get_neighbours( e, vertex )
-      neighbours= []
+    neighbours= []
     e.each do |edge|
       neighbours << edge if edge.a == vertex
     end
@@ -38,12 +38,11 @@ module AntAlgorithm
 
     p.each_with_index do |posibility, i|
       current_posibility += posibility
-      {} if chance <= current_posibility
+      if chance <= current_posibility
+        puts 'Chance'
+      end
     end
-
-
   end
-
 end
 
 module BellmanFord
