@@ -4,7 +4,7 @@ class Edge
     self.a = from.to_i - 1
     self.b = to.to_i - 1
     self.cost = cost.to_i
-    self.feromone = 0
+    self.feromone = (3*rand+1).to_i
   end
 end
 
@@ -265,33 +265,57 @@ end
 
 
 module AntAlgorithm
-  def self.get_neighbours( e, vertex )
+  def self.get_neighbours( e, vertex , end )
       neighbours= []
     e.each do |edge|
       neighbours << edge if edge.a == vertex
+      # return edge.b if edge.b == end
     end
     return neighbours
   end
 
-  def self.ant_algorithm(neighbours, current_vertex, start, end)
-    p = Array.new(neighbours.size)
-    neighbours.each_with_index do |edge, i|
-      current_sum += feromone[i]/edge.cost
+  def self.ant_algorithm(neighbours, current_vertex, end)
+    probability = Hash.new
+    neighbours.each_with_index do |edge|
+      current_sum += edge.feromone/edge.cost
     end
     # p = (feromone[current_vertex])/current_sum
-    neighbours.each_with_index do |edge, i|
-      p[edge.b] = feromone[i]/(edge.cost * current_sum )
+    neighbours.each_with_index do |edge|
+      probability[edge.b] = edge.feromone/(edge.cost * current_sum )
     end
 
     chance = rand()
     current_posibility = 0
-    founded_index = 0
 
-    p.each_with_index do |posibility, i|
+
+    probability.each_with_index do |p, index|
       current_posibility += posibility
-      puts 'CHANCE' if (chance <= current_posibility)
+    { next_vertex = p[index], break } if (chance <= current_posibility)
+    end
+
+    return next_vertex
+  end
+
+  def self.update_feromone(e, current_path, cost)
+      delta_feromone = (cost + (3*rand).to_i)/cost
+      e.each do |edge|
+        e.feromone+=delta_feromone  if current_path.include?([e.a,e.b])
+      e
     end
   end
+
+  def self.ant_path_search(e, start, end)
+    path = Array.new
+    path << start
+
+
+    neighbours = get_neighbours(e, start, end)
+    ant_algorithm(neighbours, )
+
+  end
+
+
+
 end
 
 def read_file(file_name)
