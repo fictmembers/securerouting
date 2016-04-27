@@ -13,6 +13,39 @@
 # First two algorithm solve first described task, and third algorith is
 # trying to solve second problem.
 
+module AntAlgorithm
+  def self.get_neighbours( e, vertex )
+      neighbours= []
+    e.each do |edge|
+      neighbours << edge if edge.a == vertex
+    end
+    return neighbours
+  end
+
+  def self.ant_algorithm( neighbours , current_vertex ,start, end)
+    p = Array.new(neighbours.size)
+    neighbours.each_with_index do |edge, i|
+      current_sum += feromone[i]/edge.cost
+    end
+    # p = (feromone[current_vertex])/current_sum
+    neighbours.each_with_index do |edge, i|
+      p[edge.b] = feromone[i]/(edge.cost * current_sum )
+    end
+
+    chance = rand()
+    current_posibility = 0
+    founded_index = 0
+
+    p.each_with_index do |posibility, i|
+      current_posibility += posibility
+      {} if chance <= current_posibility
+    end
+
+
+  end
+
+end
+
 module BellmanFord
   INF = Float::INFINITY
 
@@ -291,12 +324,13 @@ class Edge
   # cost - Cost of current edge
   # line - Object of drawing
 
-  attr_accessor :a, :b, :cost, :line
+  attr_accessor :a, :b, :cost, :feromone, :line
 
   def initialize(from, to, cost, app)
     self.a = from.to_i - 1
     self.b = to.to_i - 1
     self.cost = cost.to_i
+    self.feromone = 0
 
     @app = app
   end

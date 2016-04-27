@@ -1,9 +1,10 @@
 class Edge
-  attr_accessor :a, :b, :cost
+  attr_accessor :a, :b, :cost, :feromone
   def initialize(from, to, cost)
     self.a = from.to_i - 1
     self.b = to.to_i - 1
     self.cost = cost.to_i
+    self.feromone = 0
   end
 end
 
@@ -253,12 +254,43 @@ module WaveAlgorithm
       end
     end
 
-    cost = []
+    costs = []
     completed_pathes.each do |path|
-      cost << paths_cost(path, e)
+      costs << paths_cost(path, e)
     end
 
-    return cost, completed_pathes
+    return costs, completed_pathes
+  end
+end
+
+
+module AntAlgorithm
+  def self.get_neighbours( e, vertex )
+      neighbours= []
+    e.each do |edge|
+      neighbours << edge if edge.a == vertex
+    end
+    return neighbours
+  end
+
+  def self.ant_algorithm(neighbours, current_vertex, start, end)
+    p = Array.new(neighbours.size)
+    neighbours.each_with_index do |edge, i|
+      current_sum += feromone[i]/edge.cost
+    end
+    # p = (feromone[current_vertex])/current_sum
+    neighbours.each_with_index do |edge, i|
+      p[edge.b] = feromone[i]/(edge.cost * current_sum )
+    end
+
+    chance = rand()
+    current_posibility = 0
+    founded_index = 0
+
+    p.each_with_index do |posibility, i|
+      current_posibility += posibility
+      puts 'CHANCE' if (chance <= current_posibility)
+    end
   end
 end
 
@@ -296,6 +328,14 @@ loop do
 
   costs, ways = WaveAlgorithm.search(e, v.to_i, t.to_i)
 
+  puts "Wave Algorithm"
+  ways.each_with_index do |way, index|
+    puts "Path #{index} #{way} has cost #{costs[index]}"
+  end
+
+  costs, ways = PathFinder.unique_routes(n, e, v.to_i, t.to_i)
+
+  puts "Bellman - Ford Algorithm"
   ways.each_with_index do |way, index|
     puts "Path #{index} #{way} has cost #{costs[index]}"
   end
