@@ -365,10 +365,6 @@ def read_file(file_name)
     edges << Edge.new(edge[1], edge[0], edge[2])
   end
 
-  edges.each_with_index do |edge, index|
-    puts "#{index + 1}, from (#{edge.a + 1}) to (#{edge.b + 1}) "
-  end
-
   return n, m, edges
 end
 
@@ -384,22 +380,20 @@ loop do
 
   n, m, e = read_file('input_simple.txt')
 
-  costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
-
   puts "Wave Algorithm"
+  costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
   ways.each_with_index do |way, index|
     puts "Path #{index} #{way} has cost #{costs[index]}"
   end
-
-  costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
 
   puts "Bellman - Ford Algorithm"
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
+  costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
+  ways.each do |key, array|
+    puts "Path #{array} has cost #{key}"
   end
 
-  way, cost = AntAlgorithm.ant_path_search(m, e.dup, v.to_i - 1, t.to_i - 1)
+  #way, cost = AntAlgorithm.ant_path_search(m, e.dup, v.to_i - 1, t.to_i - 1)
 
   puts "ANT Algorithm"
-  puts "Path #{way.inspect}, cost: #{cost}"
+  #puts "Path #{way.inspect}, cost: #{cost}"
 end

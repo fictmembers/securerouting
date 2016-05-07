@@ -13,6 +13,7 @@
 # First two algorithm solve first described task, and third algorith is
 # trying to solve second problem.
 
+=begin
 module AntAlgorithm
   def self.get_neighbours( e, vertex )
     neighbours= []
@@ -44,6 +45,7 @@ module AntAlgorithm
     end
   end
 end
+=end
 
 module BellmanFord
   INF = Float::INFINITY
@@ -338,7 +340,7 @@ class Edge
 
   def draw(from, to)
     @app.stroke @app.black
-    @line = @app.line from.y + 35, from.x + 16, to.y + 35, to.x + 16
+    @line = @app.line from.y + 35, from.x + 16, to.y + 35, to.x + 16            # 35px - is half of image in width and 16px is half of image in height
     @weight = @app.para self.cost
     @weight.move (from.y + to.y + 70) / 2, (from.x + to.x + 32) / 2
   end
@@ -381,7 +383,7 @@ class Router
   def draw
     @image = @app.image 'move.gif', :top => self.x, :left => self.y
     @text  = @app.para name
-    @text.move self.y + 80, self.x
+    @text.move self.y, self.x + 40
   end
 
   def hide
@@ -481,7 +483,7 @@ Shoes.app do
     # Statistics
     stack :width => 0.5 do
       flow do
-        caption "General: "
+        para "General: "
         para "connections: "
         @number_of_connections = para "0"
         para "routers: "
@@ -536,32 +538,49 @@ Shoes.app do
 
 
       # This button starts proccess of finding unique routes
-
       @process_button.click do
+        # Empty previous results
         @result.clear
+
+        # Check users input
         if @start_vertex.text.to_s.empty? or @finish_vertex.text.to_s.empty?
           alert("Some value is wrong!")
         else
-          @connections.each { |connection| connection.hide }
-          connections = @connections.clone
-          #@costs, @set_of_unique_routes = PathFinder.unique_routes(@routers.size,
-          #                                                connections,
-          #                                                @start_vertex.text.to_i,
-          #                                                @finish_vertex.text.to_i)
+          # If at's ok, prepare map.
 
-          @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
+          @connections.each { |connection| connection.hide }  # Hide all exiting connections
+          connections = @connections.clone                    # Create copy of all connections
+
+
+          ### There should be a trigger for chosing algorithm
+
+
+          @costs, @set_of_unique_routes = PathFinder.unique_routes(@routers.size,
+                                                          connections,
                                                           @start_vertex.text.to_i,
                                                           @finish_vertex.text.to_i)
 
+=begin
+          @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
+                                                          @start_vertex.text.to_i,
+                                                          @finish_vertex.text.to_i)
+=end
+
+          # If there some solutions - show them
           if !@set_of_unique_routes.empty?
+            # Draw solutions on the board
             initials.draw_set(@set_of_unique_routes, @connections, @routers)
+            # Show solutions in text form
             @result.append {"Founded results"}
-            @set_of_unique_routes.zip(@costs).each do |path, costs|
-              @result.append { para "Path - Cost: #{costs} [#{path.join(' - ')}]" }
+            @set_of_unique_routes.zip(@costs).each do |path, cost|
+              @result.append do
+                para "Path #{translated_path.join('-')} has cost: #{cost} "
+              end
             end
           else
             alert("No paths found!")
           end
+
         end
       end
     end
