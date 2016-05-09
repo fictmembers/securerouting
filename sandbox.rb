@@ -268,10 +268,12 @@ module AntAlgorithm
   def self.get_neighbours( e, vertex , visited )
       neighbours= []
     e.each do |edge|
+
     if edge.a == vertex && visited[edge.b] == false
       neighbours << edge
       #puts "ONE MOre NEIGHbor"
     end
+
 
       # return edge.b if edge.b == end
     end
@@ -300,6 +302,7 @@ module AntAlgorithm
 
     probability.each do |key, value|
       current_posibility += value
+
       if chance <= current_posibility
         next_vertex = key
         break
@@ -308,6 +311,7 @@ module AntAlgorithm
     visited[next_vertex] = true
     neighbours.each do |vertex|
       return vertex if next_vertex == vertex.b
+
     end
 
   end
@@ -315,12 +319,15 @@ module AntAlgorithm
   def self.update_feromone(e, current_path, cost)
       delta_feromone = 1 + ((3*rand).to_i)/cost
       e.each do |edge|
+
         edge.feromone+=delta_feromone  if current_path.include?([edge.a+1,edge.b+1])
+
       end
   end
 
   def self.ant_path_search(number_of_vertex, e, start, end_path)
     puts "Routers: #{number_of_vertex}"
+
     answer = Hash.new
     1000.times do
       path = Array.new
@@ -347,6 +354,7 @@ module AntAlgorithm
     end
 
     return answer
+
 
   end
 
@@ -388,19 +396,25 @@ loop do
   puts 'Input start end finish point '
   v, t = gets.split(/\s+/)
 
+
   costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
 
   puts "Wave Algorithm"
+  costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
   ways.each_with_index do |way, index|
     puts "Path #{index} #{way} has cost #{costs[index]}"
   end
+
 
   costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
 
+
   puts "Bellman - Ford Algorithm"
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
+  costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
+  ways.each do |key, array|
+    puts "Path #{array} has cost #{key}"
   end
+
 
 
   answer = AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
