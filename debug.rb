@@ -87,7 +87,7 @@ module PathFinder
   #   path - finded path
   # )
   def PathFinder.cut_edges(e, path)
-    for i in 1..path.length - 3
+    for i in 0..path.length - 2
       e.delete_if { |edge| (edge.a == path[i] && edge.b == path[i + 1]) }
       e.delete_if { |edge| (edge.a == path[i + 1] && edge.b == path[i]) }
     end
