@@ -13,40 +13,6 @@
 # First two algorithm solve first described task, and third algorith is
 # trying to solve second problem.
 
-=begin
-module AntAlgorithm
-  def self.get_neighbours( e, vertex )
-    neighbours= []
-    e.each do |edge|
-      neighbours << edge if edge.a == vertex
-    end
-    return neighbours
-  end
-
-  def self.ant_algorithm( neighbours , current_vertex ,start, end)
-    p = Array.new(neighbours.size)
-    neighbours.each_with_index do |edge, i|
-      current_sum += feromone[i]/edge.cost
-    end
-    # p = (feromone[current_vertex])/current_sum
-    neighbours.each_with_index do |edge, i|
-      p[edge.b] = feromone[i]/(edge.cost * current_sum )
-    end
-
-    chance = rand()
-    current_posibility = 0
-    founded_index = 0
-
-    p.each_with_index do |posibility, i|
-      current_posibility += posibility
-      if chance <= current_posibility
-        puts 'Chance'
-      end
-    end
-  end
-end
-=end
-
 module BellmanFord
   INF = Float::INFINITY
 
@@ -114,32 +80,17 @@ module BellmanFord
     end
     return d, BellmanFord.restore_path(d, p, v, t)
   end
-end
 
-module PathFinder
-  # Module for finding unique pathes in graph
-  INF = Float::INFINITY
+  def BellmanFord.cut_edges(e, path)
+    path.shift
+    path.pop
 
-  # Edge eraser - kills used edges
-  # (
-  #   e - list of edges
-  #   path - finded path
-  # )
-  def PathFinder.cut_edges(e, path)
-    for i in 1..path.length - 3
-      e.delete_if { |edge| (edge.a == path[i] && edge.b == path[i + 1]) }
-      e.delete_if { |edge| (edge.a == path[i + 1] && edge.b == path[i]) }
+    path.each do |vertex|
+      e.delete_if { |edge| (edge.a == vertex || edge.b == vertex) }
     end
   end
 
-  # Unique routes - Main function
-
-  # This function finds all uniques ways
-  # betwean to points (from v to t)
-  # For solving problem only needs to
-  # run this function!
-
-  def PathFinder.unique_routes(n, e, v, t)
+  def BellmanFord.search(n, e, v, t)
     set = Array.new             # Set of unique pathes
     path_costs = Array.new      # Path cost
     pathes_available = true     # Not really useful, but describes loop
@@ -147,27 +98,18 @@ module PathFinder
     while pathes_available
       costs, path = BellmanFord.process(n, e, v, t)
 
-      puts "Path is #{path.join('-')}, cost is #{costs[t - 1]}"
-
       if path.length <= 1
         pathes_available = false
         break
       else
-        #set << {:cost => costs[t - 1], :path => path}
         set << path
         path_costs << costs[t - 1]
-        puts "SET IS #{set}"
 
         if path.length == 2     # If it's diectly connected
-          puts "Direct connection! (disable connection)"
           e.delete_if { |edge| (edge.a == v - 1 && edge.b == t - 1) }
           e.delete_if { |edge| (edge.b == v - 1 && edge.a == t - 1) }
-        elsif path.length == 3     # If it's connected by one neighbour
-          puts "One neighbour connection! (close way to destination)"
-          e.delete_if { |edge| (edge.a == path[1] && edge.b == t - 1) }
-          e.delete_if { |edge| (edge.b == v - 1 && edge.a == path[1]) }
         else
-          PathFinder.cut_edges(e, path)
+          BellmanFord.cut_edges(e, path.dup)
         end
       end
     end
@@ -555,7 +497,7 @@ Shoes.app do
           ### There should be a trigger for chosing algorithm
 
 
-          @costs, @set_of_unique_routes = PathFinder.unique_routes(@routers.size,
+          @costs, @set_of_unique_routes = BellmanFord.search(@routers.size,
                                                           connections,
                                                           @start_vertex.text.to_i,
                                                           @finish_vertex.text.to_i)
@@ -574,7 +516,7 @@ Shoes.app do
             @result.append {"Founded results"}
             @set_of_unique_routes.zip(@costs).each do |path, cost|
               @result.append do
-                para "Path #{translated_path.join('-')} has cost: #{cost} "
+                para "Path #{path.join('-')} has cost: #{cost} "
               end
             end
           else

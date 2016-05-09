@@ -75,32 +75,17 @@ module BellmanFord
     end
     return d, BellmanFord.restore_path(d, p, v, t)
   end
-end
 
-module PathFinder
-  # Module for finding unique pathes in graph
-  INF = Float::INFINITY
+  def BellmanFord.cut_edges(e, path)
+    path.shift
+    path.pop
 
-  # Edge eraser - kills used edges
-  # (
-  #   e - list of edges
-  #   path - finded path
-  # )
-  def PathFinder.cut_edges(e, path)
-    for i in 0..path.length - 2
-      e.delete_if { |edge| (edge.a == path[i] && edge.b == path[i + 1]) }
-      e.delete_if { |edge| (edge.a == path[i + 1] && edge.b == path[i]) }
+    path.each do |vertex|
+      e.delete_if { |edge| (edge.a == vertex || edge.b == vertex) }
     end
   end
 
-  # Unique routes - Main function
-
-  # This function finds all uniques ways
-  # betwean to points (from v to t)
-  # For solving problem only needs to
-  # run this function!
-
-  def PathFinder.unique_routes(n, e, v, t)
+  def BellmanFord.search(n, e, v, t)
     set = Array.new             # Set of unique pathes
     path_costs = Array.new      # Path cost
     pathes_available = true     # Not really useful, but describes loop
@@ -108,31 +93,24 @@ module PathFinder
     while pathes_available
       costs, path = BellmanFord.process(n, e, v, t)
 
-      #puts "Path is #{path.join('-')}, cost is #{costs[t - 1]}"
-
       if path.length <= 1
         pathes_available = false
         break
       else
-        #set << {:cost => costs[t - 1], :path => path}
         set << path
         path_costs << costs[t - 1]
 
         if path.length == 2     # If it's diectly connected
           e.delete_if { |edge| (edge.a == v - 1 && edge.b == t - 1) }
           e.delete_if { |edge| (edge.b == v - 1 && edge.a == t - 1) }
-        elsif path.length == 3     # If it's connected by one neighbour
-          e.delete_if { |edge| (edge.a == path[1] && edge.b == t - 1) }
-          e.delete_if { |edge| (edge.b == v - 1 && edge.a == path[1]) }
         else
-          PathFinder.cut_edges(e, path)
+          BellmanFord.cut_edges(e, path.dup)
         end
       end
     end
     return path_costs, set
   end
 end
-
 
 module WaveAlgorithm
 
@@ -319,7 +297,7 @@ loop do
 
   puts "\n=========================================================\n"
   puts "Bellman - Ford Algorithm"
-  costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
+  costs, ways = BellmanFord.search(n, e.dup, v.to_i, t.to_i)
 
   ways.each_with_index do |way, index|
     puts "Path #{index} #{way} has cost #{costs[index]}"
