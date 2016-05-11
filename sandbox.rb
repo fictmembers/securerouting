@@ -385,7 +385,7 @@ t = 0 # Destination point
 n = 0 # Edges
 m = 0 # Points
 e = [] # List of edges
-n, m, e = read_file('input_simple.txt')
+n, m, e = read_file('Test/input_simple.txt')
 loop do
   puts 'Input start end finish point '
   v, t = gets.split(/\s+/)
@@ -418,7 +418,7 @@ loop do
   answer = AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
 
   puts "ANT Algorithm"
-    if !answer.empty?
+    unless answer.empty?
       answer.keys.sort.each { |key| puts "Path:#{answer[key]} ; Cost: #{key}"  }
     else
         puts "Path not found!"
