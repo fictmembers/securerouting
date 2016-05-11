@@ -269,13 +269,10 @@ module AntAlgorithm
       neighbours= []
     e.each do |edge|
 
-    if edge.a == vertex && visited[edge.b] == false
-      neighbours << edge
-      #puts "ONE MOre NEIGHbor"
-    end
+      if edge.a == vertex && visited[edge.b] == false
+        neighbours << edge
+      end
 
-
-      # return edge.b if edge.b == end
     end
     return nil if neighbours.empty?
     return neighbours
@@ -286,14 +283,13 @@ module AntAlgorithm
     next_vertex = 0
     probability = Hash.new
     neighbours.each do |edge|
-      puts "current_sum: #{current_sum}"
+
       current_sum += edge.feromone.to_f / edge.cost
-      puts "start_adge: #{edge.a}; end_edge: #{edge.b}; feromone: #{edge.feromone}; cost:#{edge.cost}; current_sum: #{current_sum}"
+
     end
-    # p = (feromone[current_vertex])/current_sum
     neighbours.each do |edge|
       probability[edge.b] = (edge.feromone.to_f/ edge.cost).to_f / current_sum
-      puts "probability: key:#{edge.b}; value: #{probability[edge.b]}"
+
     end
 
     chance = rand()
@@ -326,7 +322,6 @@ module AntAlgorithm
   end
 
   def self.ant_path_search(number_of_vertex, e, start, end_path)
-    puts "Routers: #{number_of_vertex}"
 
     answer = Hash.new
     1000.times do
@@ -338,14 +333,15 @@ module AntAlgorithm
 
       loop do
         neighbours = get_neighbours(e, current_start, visited)
-        break if neighbours == nil
+        if neighbours == nil
+          current_cost = 0
+          break
+        end
 
         current_edge = ant_algorithm(neighbours, visited)
-        puts "current edge is Array => #{current_edge.kind_of?(Array)}"
         path << [ current_edge.a+1,current_edge.b+1]
         current_start = current_edge.b
         current_cost += current_edge.cost
-        puts "a: #{current_edge.a}, b: #{current_edge.b}, end: #{end_path}"
         break if current_edge.b == end_path
       end
       next if current_cost == 0
@@ -379,9 +375,7 @@ def read_file(file_name)
     edges << Edge.new(edge[1], edge[0], edge[2])
   end
 
-  edges.each_with_index do |edge, index|
-    puts "#{index + 1}, from (#{edge.a + 1}) to (#{edge.b + 1}) "
-  end
+
 
   return n, m, edges
 end
@@ -411,8 +405,12 @@ loop do
 
   puts "Bellman - Ford Algorithm"
   costs, ways = PathFinder.unique_routes(n, e.dup, v.to_i, t.to_i)
-  ways.each do |key, array|
-    puts "Path #{array} has cost #{key}"
+  if ways
+    ways.each do |key, array|
+      puts "Path #{array} has cost #{key}"
+    end
+  else
+    puts "Path not found!"
   end
 
 
@@ -420,7 +418,9 @@ loop do
   answer = AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
 
   puts "ANT Algorithm"
-  #puts "Path not found!" if answer.include?(nil)
-  answer.keys.sort.each { |key| puts "Path:#{answer[key]} ; Cost: #{key}"  }
-
+    if !answer.empty?
+      answer.keys.sort.each { |key| puts "Path:#{answer[key]} ; Cost: #{key}"  }
+    else
+        puts "Path not found!"
+    end
   end
