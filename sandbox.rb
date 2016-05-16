@@ -104,7 +104,7 @@ module PathFinder
     while pathes_available
       costs, path = BellmanFord.process(n, e, v, t)
 
-      puts "Path is #{path.join('-')}, cost is #{costs[t - 1]}"
+    #  puts "Path is #{path.join('-')}, cost is #{costs[t - 1]}"
 
       if path.length <= 1
         pathes_available = false
