@@ -316,7 +316,7 @@ module AntAlgorithm
   def self.ant_path_search(number_of_vertex, e, start, end_path)
 
     answer = Hash.new
-    1000.times do
+    10000.times do
       path = Array.new
       visited = Array.new(number_of_vertex , false)
       visited[start] = true
@@ -331,7 +331,8 @@ module AntAlgorithm
         end
 
         current_edge = ant_algorithm(neighbours, visited)
-        path << [ current_edge.a+1,current_edge.b+1]
+        #path << [ current_edge.a+1,current_edge.b+1]
+        path << [ current_edge.a,current_edge.b]
         current_start = current_edge.b
         current_cost += current_edge.cost
         break if current_edge.b == end_path
@@ -340,9 +341,27 @@ module AntAlgorithm
       answer[current_cost] = path unless answer.has_value?(path)
       update_feromone(e, path, current_cost)
     end
-    return answer
+    costs, ways = answer_translator(answer)
+    return costs, ways
   end
+
+  def self.answer_translator(answer)
+    costs = Array.new
+    ways = Array.new
+    answer.keys.sort.each do |key|
+      current_way = Array.new
+      costs << key; puts "Costs is #{costs}"
+       current_way << answer[key].first.first
+        answer[key].each do |element|
+          current_way << element.last
+        end
+        ways << current_way
+      end
+    return costs, ways
+  end
+
 end
+
 
 class Edge
 
@@ -361,7 +380,7 @@ class Edge
     self.a = from.to_i - 1
     self.b = to.to_i - 1
     self.cost = cost.to_i
-    self.feromone = 0
+    self.feromone = (3*rand+1).to_i
 
     @app = app
   end
@@ -549,6 +568,15 @@ Shoes.app do
       end
 
       flow do
+        flow do
+        para "Choose algorithm:"
+        list_box items: ["Wave algorithm", "Bellman-Ford algorithm", "Ant algorithm"],
+        width: 195, choose: "Wave algorithm" do |list|
+            @current_algorithm.text = list.text
+        end
+
+      end
+
         @process_button = button "Search"
         @restore_graph_button = button "Restore"
 
@@ -583,25 +611,26 @@ Shoes.app do
 
 
           ### There should be a trigger for chosing algorithm
-
-
-          @costs, @set_of_unique_routes = BellmanFord.search(@routers.size,
-                                                          connections,
-                                                          @start_vertex.text.to_i,
-                                                          @finish_vertex.text.to_i)
-
-                                              
-=begin
-          @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
-                                                          @start_vertex.text.to_i,
-                                                          @finish_vertex.text.to_i)
-=end
-=begin
-          @costs, @set_of_unique_routes = AntAlgorithm.ant_path_search(@routers.size,
-                                                          connections,
-                                                          @start_vertex.text.to_i,
-                                                          @finish_vertex.text.to_i)
-=end
+          # case @current_algorithm
+          #
+          #when "Wave algorithm"
+            # @costs, @set_of_unique_routes = BellmanFord.search(@routers.size,
+            #                                                 connections,
+            #                                                 @start_vertex.text.to_i,
+            #                                                 @finish_vertex.text.to_i)
+          #
+          #
+          #   when "Bellman-Ford algorithm"
+            # @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
+            #                                                 @start_vertex.text.to_i,
+            #                                                 @finish_vertex.text.to_i)
+          #
+          #   when "Ant algorithm"
+            @costs, @set_of_unique_routes = AntAlgorithm.ant_path_search(@routers.size,
+                                                            connections,
+                                                            @start_vertex.text.to_i-1,
+                                                            @finish_vertex.text.to_i-1)
+          # end
 
           # If there some solutions - show them
           if !@set_of_unique_routes.empty?

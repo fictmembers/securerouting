@@ -348,10 +348,23 @@ module AntAlgorithm
       answer[current_cost] = path unless answer.has_value?(path)
       update_feromone(e, path, current_cost)
     end
+    costs, ways = answer_translator(answer)
+    return costs, ways
+  end
 
-    return answer
-
-
+  def self.answer_translator(answer)
+    costs = Array.new
+    ways = Array.new
+    answer.keys.sort.each do |key|
+      current_way = Array.new
+      costs << key; puts "Costs is #{costs}"
+       current_way << answer[key].first.first
+        answer[key].each do |element|
+          current_way << element.last
+        end
+        ways << current_way
+      end
+    return costs, ways
   end
 
 
@@ -414,13 +427,21 @@ loop do
   end
 
 
-
-  answer = AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
-
-  puts "ANT Algorithm"
-    unless answer.empty?
-      answer.keys.sort.each { |key| puts "Path:#{answer[key]} ; Cost: #{key}"  }
-    else
-        puts "Path not found!"
+  costs, ways =  AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
+    puts "ANT algorithm"
+  if ways
+    ways.each_with_index do | array, index|
+      puts "Path #{array.inspect} has cost #{costs[index]}"
     end
+  else
+    puts "Path not found!"
+  end
+  # answer = AntAlgorithm.ant_path_search(m, e, v.to_i - 1, t.to_i - 1)
+  #
+  # puts "ANT Algorithm"
+  #   unless answer.empty?
+  #     answer.keys.sort.each { |key| puts "Path:#{answer[key]} ; Cost: #{key}"  }
+  #   else
+  #       puts "Path not found!"
+  #   end
   end

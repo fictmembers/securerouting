@@ -280,7 +280,7 @@ loop do
   puts 'Input start end finish point '
   v, t = gets.split(/\s+/)
 
-  n, m, e = read_file("input.txt")
+  n, m, e = read_file('Test/input.txt')
 
   puts "Routers #{n}, Edges #{m}"
   e.each do |edge|
