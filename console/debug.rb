@@ -1,8 +1,8 @@
 class Edge
   attr_accessor :a, :b, :cost, :feromone
   def initialize(from, to, cost)
-    self.a = from.to_i - 1
-    self.b = to.to_i - 1
+    self.a = from.to_i
+    self.b = to.to_i
     self.cost = cost.to_i
     self.feromone = (3*rand+1).to_i
   end
@@ -27,7 +27,7 @@ module BellmanFord
       return []
     else
       path = Array.new    # Path
-      cur = t - 1
+      cur = t
       while cur != -1
         path << cur
         cur = p[cur]
@@ -56,9 +56,9 @@ module BellmanFord
   # )
 
   def BellmanFord.process(n, e, v, t)
-    d = Array.new(n, INF)   # Costs
-    p = Array.new(n, -1)    # Parents
-    d[v - 1] = 0
+    d = Array.new(n + 1, INF)   # Costs
+    p = Array.new(n + 1, -1)    # Parents
+    d[v] = 0
 
     while 1
       any = false
@@ -98,11 +98,11 @@ module BellmanFord
         break
       else
         set << path
-        path_costs << costs[t - 1]
+        path_costs << costs[t]
 
         if path.length == 2     # If it's diectly connected
-          e.delete_if { |edge| (edge.a == v - 1 && edge.b == t - 1) }
-          e.delete_if { |edge| (edge.b == v - 1 && edge.a == t - 1) }
+          e.delete_if { |edge| (edge.a == v && edge.b == t) }
+          e.delete_if { |edge| (edge.b == v && edge.a == t) }
         else
           BellmanFord.cut_edges(e, path.dup)
         end
@@ -167,8 +167,8 @@ module WaveAlgorithm
   end
 
   def self.search(e, v, t)
-    v -= 1  # Normalize vertexes
-    t -= 1  # Start from vertex №0
+#    v -= 1  # Normalize vertexes
+#    t -= 1  # Start from vertex №0
 
     pathes_available = true # Trigger to exit searching
 
@@ -246,6 +246,12 @@ module WaveAlgorithm
       cost << paths_cost(path, e)
     end
 
+    completed_pathes.each do |path|
+      path.each do |vertex|
+        vertex = vertex + 1
+      end
+    end
+
     return cost, completed_pathes
   end
 end
@@ -276,11 +282,20 @@ n = 0 # Edges
 m = 0 # Points
 e = [] # List of edges
 
-loop do
-  puts 'Input start end finish point '
-  v, t = gets.split(/\s+/)
+puts "==================================="
+puts "Finding unique pathes in graph"
+puts "-----------------------------------"
+puts "Algorithms: Wave alg., Bellman-Ford"
+puts "-----------------------------------"
+puts "Authors: R. Kaporin | A. Kogulko"
+puts "==================================="
 
-  n, m, e = read_file('Test/input.txt')
+loop do
+  print "Enter path to file >> "; file_path = gets.chomp!
+  n, m, e = read_file(file_path)
+
+  print "Input start end finish point >> "
+  v, t = gets.split(/\s+/)
 
   puts "Routers #{n}, Edges #{m}"
   e.each do |edge|
