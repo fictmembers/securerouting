@@ -571,7 +571,7 @@ Shoes.app do
         flow do
         para "Choose algorithm:"
         list_box items: ["Wave algorithm", "Bellman-Ford algorithm", "Ant algorithm"],
-        width: 195, choose: "Wave algorithm" do |list|
+        width: 195, choose: "Bellman-Ford algorithm" do |list|
             @current_algorithm.text = list.text
         end
 
@@ -614,24 +614,28 @@ Shoes.app do
           # case @current_algorithm
           #
           #when "Wave algorithm"
+
             # @costs, @set_of_unique_routes = BellmanFord.search(@routers.size,
             #                                                 connections,
             #                                                 @start_vertex.text.to_i,
             #                                                 @finish_vertex.text.to_i)
           #
           #
+
           #   when "Bellman-Ford algorithm"
-            # @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
-            #                                                 @start_vertex.text.to_i,
-            #                                                 @finish_vertex.text.to_i)
+
+            @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
+                                                            @start_vertex.text.to_i,
+                                                            @finish_vertex.text.to_i)
           #
           #   when "Ant algorithm"
+
             @costs, @set_of_unique_routes = AntAlgorithm.ant_path_search(@routers.size,
                                                             connections,
                                                             @start_vertex.text.to_i-1,
                                                             @finish_vertex.text.to_i-1)
           # end
-
+      
           # If there some solutions - show them
           if !@set_of_unique_routes.empty?
             # Draw solutions on the board
