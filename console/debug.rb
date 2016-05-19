@@ -167,8 +167,6 @@ module WaveAlgorithm
   end
 
   def self.search(e, v, t)
-#    v -= 1  # Normalize vertexes
-#    t -= 1  # Start from vertex №0
 
     pathes_available = true # Trigger to exit searching
 
@@ -246,15 +244,119 @@ module WaveAlgorithm
       cost << paths_cost(path, e)
     end
 
-    completed_pathes.each do |path|
-      path.each do |vertex|
-        vertex = vertex + 1
-      end
-    end
-
     return cost, completed_pathes
   end
 end
+
+module AntAlgorithm
+  def self.get_neighbours( e, vertex , visited )
+      neighbours= []
+    e.each do |edge|
+
+      if edge.a == vertex && visited[edge.b] == false
+        neighbours << edge
+      end
+
+    end
+    return nil if neighbours.empty?
+    return neighbours
+  end
+
+  def self.ant_algorithm(neighbours,visited)
+    current_sum = 0
+    next_vertex = 0
+    probability = Hash.new
+    neighbours.each do |edge|
+
+      current_sum += edge.feromone.to_f / edge.cost
+
+    end
+    neighbours.each do |edge|
+      probability[edge.b] = (edge.feromone.to_f/ edge.cost).to_f / current_sum
+
+    end
+
+    chance = rand()
+    current_posibility = 0
+
+
+    probability.each do |key, value|
+      current_posibility += value
+
+      if chance <= current_posibility
+        next_vertex = key
+        break
+      end
+    end
+    visited[next_vertex] = true
+    neighbours.each do |vertex|
+      return vertex if next_vertex == vertex.b
+
+    end
+
+  end
+
+  def self.update_feromone(e, current_path, cost)
+      delta_feromone = 1 + ((3*rand).to_i)/cost
+      e.each do |edge|
+
+        edge.feromone+=delta_feromone  if current_path.include?([edge.a+1,edge.b+1])
+
+      end
+  end
+
+  def self.ant_path_search(number_of_vertex, e, start, end_path)
+
+    answer = Hash.new
+    visited = Array.new(number_of_vertex+1 , false)
+    1000.times do
+      path = Array.new
+      visited[end_path] = false
+      visited[start] = true
+      current_cost = 0
+      current_start = start
+
+      loop do
+        neighbours = get_neighbours(e, current_start, visited)
+        if neighbours == nil
+          current_cost = 0
+          break
+        end
+
+        current_edge = ant_algorithm(neighbours, visited)
+        path << [ current_edge.a,current_edge.b]
+        current_start = current_edge.b
+        current_cost += current_edge.cost
+        break if current_edge.b == end_path
+      end
+      next if current_cost == 0
+      answer[current_cost] = path unless answer.has_value?(path)
+      update_feromone(e, path, current_cost)
+    end
+    costs, ways = answer_translator(answer)
+    return costs, ways
+  end
+
+  def self.answer_translator(answer)
+    costs = Array.new
+    ways = Array.new
+    answer.keys.sort.each do |key|
+      current_way = Array.new
+      costs << key
+       current_way << answer[key].first.first
+        answer[key].each do |element|
+          current_way << element.last
+        end
+        ways << current_way
+      end
+    return costs, ways
+  end
+
+
+
+end
+
+
 
 def read_file(file_name)
   edges = []
@@ -317,5 +419,20 @@ loop do
   ways.each_with_index do |way, index|
     puts "Path #{index} #{way} has cost #{costs[index]}"
   end
+  puts "=========================================================\n"
+
+  puts "\n=========================================================\n"
+  puts "Ant Algorithm"
+  costs, ways =  AntAlgorithm.ant_path_search(m, e, v.to_i, t.to_i)
+  ways.each_with_index do |way, index|
+    puts "Path #{index} #{way} has cost #{costs[index]}"
+  end
+  # if ways
+  #   ways.each_with_index do | array, index|
+  #     puts "Path #{array.inspect} has cost #{costs[index]}"
+  #   end
+  # else
+  #   puts "Path not found!"
+  # end
   puts "=========================================================\n"
 end

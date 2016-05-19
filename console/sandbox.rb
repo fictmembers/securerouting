@@ -324,9 +324,10 @@ module AntAlgorithm
   def self.ant_path_search(number_of_vertex, e, start, end_path)
 
     answer = Hash.new
+    visited = Array.new(number_of_vertex , false)
     1000.times do
       path = Array.new
-      visited = Array.new(number_of_vertex , false)
+      visited[end_path] = false
       visited[start] = true
       current_cost = 0
       current_start = start
@@ -398,7 +399,7 @@ t = 0 # Destination point
 n = 0 # Edges
 m = 0 # Points
 e = [] # List of edges
-n, m, e = read_file('Test/input_simple.txt')
+n, m, e = read_file('../Test/input_simple.txt')
 loop do
   puts 'Input start end finish point '
   v, t = gets.split(/\s+/)
