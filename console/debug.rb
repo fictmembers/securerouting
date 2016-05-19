@@ -167,8 +167,6 @@ module WaveAlgorithm
   end
 
   def self.search(e, v, t)
-#    v -= 1  # Normalize vertexes
-#    t -= 1  # Start from vertex №0
 
     pathes_available = true # Trigger to exit searching
 
@@ -244,12 +242,6 @@ module WaveAlgorithm
     cost = []
     completed_pathes.each do |path|
       cost << paths_cost(path, e)
-    end
-
-    completed_pathes.each do |path|
-      path.each do |vertex|
-        vertex = vertex + 1
-      end
     end
 
     return cost, completed_pathes
