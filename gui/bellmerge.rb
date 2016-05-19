@@ -341,20 +341,59 @@ module AntAlgorithm
     return costs, ways
   end
 
-  def self.answer_translator(answer)
-    costs = Array.new
-    ways = Array.new
-    answer.keys.sort.each do |key|
-      current_way = Array.new
-      costs << key
-       current_way << answer[key].first.first
-        answer[key].each do |element|
-          current_way << element.last
+
+    def self.unique_path (costs, ways)
+      answer = Array.new
+      answer_cost = Array.new
+      index = 0
+      on_target = true
+      ways.each_with_index do |current_array, ind|
+        shift  = Array.new(current_array)
+        shift.shift
+        shift.pop
+        shift.each do |current_element|
+
+          answer.each do |answer_element|
+
+           if answer_element.include?(current_element)
+             on_target = false
+             break
+           end
+           on_target = true
+
+          end
+          break unless on_target
         end
-        ways << current_way
+
+        if on_target
+          answer[index] = current_array
+          answer_cost[index] = costs[ind]
+          index+=1
+        else
+          next
+        end
+
       end
-    return costs, ways
-  end
+
+
+      return answer_cost, answer
+    end
+
+    def self.answer_translator(answer)
+      costs = Array.new
+      ways = Array.new
+      answer.keys.sort.each do |key|
+        current_way = Array.new
+        costs << key
+         current_way << answer[key].first.first
+          answer[key].each do |element|
+            current_way << element.last
+          end
+          ways << current_way
+        end
+        costs, ways = unique_path(costs, ways)
+      return costs, ways
+    end
 end
 
 class Edge
