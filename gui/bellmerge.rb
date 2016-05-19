@@ -1,12 +1,17 @@
-class Edge
-  attr_accessor :a, :b, :cost, :feromone
-  def initialize(from, to, cost)
-    self.a = from.to_i
-    self.b = to.to_i
-    self.cost = cost.to_i
-    self.feromone = (3*rand+1).to_i
-  end
-end
+###                       UNIQUE PATHFINDER PROGRAM                           ##
+# Developed to improve routing security in computers network.
+
+# Finds unique routes in non-oriented graph.
+# It uses tree different ways to find unique ways:
+#  - Modified Bellman-Fords algorithm
+#  - Ants algorithm
+#  - Custom wave algorithm
+
+# There are two variants of tasks:
+# - to find as much way as we can without looking on their costs
+# - to find set of unique paths whith have lowest cost
+# First two algorithm solve first described task, and third algorith is
+# trying to solve second problem.
 
 module BellmanFord
   INF = Float::INFINITY
@@ -307,10 +312,10 @@ module AntAlgorithm
   def self.ant_path_search(number_of_vertex, e, start, end_path)
 
     answer = Hash.new
-
+    visited = Array.new(number_of_vertex+1 , false)
     1000.times do
       path = Array.new
-      visited = Array.new(number_of_vertex+1 , false)
+      visited[end_path] = false
       visited[start] = true
       current_cost = 0
       current_start = start
@@ -336,43 +341,6 @@ module AntAlgorithm
     return costs, ways
   end
 
-  def self.unique_path (costs, ways)
-    answer = Array.new
-    answer_cost = Array.new
-    index = 0
-    on_target = true
-    ways.each_with_index do |current_array, ind|
-      shift  = Array.new(current_array)
-      shift.shift
-      shift.pop
-      shift.each do |current_element|
-
-        answer.each do |answer_element|
-
-         if answer_element.include?(current_element)
-           on_target = false
-           break
-         end
-         on_target = true
-
-        end
-        break unless on_target
-      end
-
-      if on_target
-        answer[index] = current_array
-        answer_cost[index] = costs[ind]
-        index+=1
-      else
-        next
-      end
-
-    end
-
-
-    return answer_cost, answer
-  end
-
   def self.answer_translator(answer)
     costs = Array.new
     ways = Array.new
@@ -385,90 +353,313 @@ module AntAlgorithm
         end
         ways << current_way
       end
-      costs, ways = unique_path(costs, ways)
     return costs, ways
   end
+end
 
+class Edge
+
+  # Class-wrapper for edge of graph
+
+  # Description of attributes
+
+  # a - Start point of edge
+  # b - Finish point of edge
+  # cost - Cost of current edge
+  # line - Object of drawing
+
+  attr_accessor :a, :b, :cost, :feromone, :line
+  attr_accessor :from_x, :from_y, :to_x, :to_y
+
+  def initialize(from, to, cost, app)
+    self.a = from.to_i
+    self.b = to.to_i
+    self.cost = cost.to_i
+    self.feromone = (3*rand+1).to_i
+
+    @app = app
+  end
+
+  def attach_router from, to
+    self.from_x = from.x
+    self.from_y = from.y
+
+    self.to_x = to.x
+    self.to_y = to.y
+  end
+
+  # Draw regular line on the map
+
+  def draw
+    @app.stroke @app.black
+    @line = @app.line self.from_y + 35, self.from_x + 16, self.to_y + 35, self.to_x + 16            # 35px - is half of image in width and 16px is half of image in height
+    @weight = @app.para self.cost
+    @weight.move (self.from_y + self.to_y + 70) / 2, (self.from_x + self.to_x + 32) / 2
+  end
+
+  # Highlight the edge
+
+  def highlight(color)
+    @app.stroke color
+    @line = @app.line self.from_y + 35, self.from_x + 16, self.to_y + 35, self.to_x + 16
+    @weight = @app.para cost
+    @weight.move (self.from_y + self.to_y + 70) / 2, (self.from_x + self.to_x + 32) / 2
+  end
+
+  # Hide edge
+
+  def hide
+    @line.hide
+    @weight.hide
+  end
+
+  # Show edge
+
+  def apear
+    @line.show
+    @weight.show
+  end
+end
+
+class Router
+  attr_accessor :name, :number, :x, :y
+  def initialize(name, number, x, y, app)
+    self.name   = name
+    self.number = number.to_i
+    self.x = x.to_i
+    self.y = y.to_i
+
+    @app = app
+  end
+
+  def draw
+    @image = @app.image 'move.gif', :top => self.x, :left => self.y
+    @text  = @app.para name
+    @text.move self.y, self.x + 40
+  end
+
+  def hide
+    @image.hide
+  end
+
+  def apear
+    @image.show
+  end
+end
+
+class AppSupport
+
+  def initialize(app)
+    @app = app
+  end
+
+  def read_file
+    file_name = @app.ask_open_file
+
+    connections = Array.new
+    routers     = Array.new
+    collector   = Array.new
+
+    File.readlines(file_name).each do |line|
+      collector << line.chomp.split(/\s+/)
+    end
+
+    n, m = collector[0][0].to_i, collector[0][1].to_i
+    collector.shift
+
+    for i in 0..m - 1
+       connections << Edge.new(collector[i][0], collector[i][1], collector[i][2], @app)
+       connections << Edge.new(collector[i][1], collector[i][0], collector[i][2], @app)
+    end
+
+    collector.shift(m)
+
+    collector.each do |router|
+      routers << Router.new(router[0].to_s, router[1], router[3], router[2], @app)
+    end
+
+    connections.each do |connect|
+      from, to = 0, 0
+      routers.each do |router|
+        if router.number == connect.a
+          from = router
+        elsif router.number == connect.b
+          to = router
+        end
+      end
+      connect.attach_router(from, to)
+    end
+
+    draw_graph(connections, routers)
+    return connections, routers, file_name
+  end
+
+  def draw_graph(connections, routers)
+    connections.each { |connection| connection.draw }
+    routers.each { |router| router.draw }
+  end
+
+  def draw_set(set_of_unique_routes, connections, routers)
+    set_of_unique_routes.each do |path|
+      color = rgb(Random.rand(255), Random.rand(255), Random.rand(255))
+      for i in 0..path.size - 2
+        connections.each do |connection|
+          if connection.a == path[i]  && connection.b == path[i + 1]
+            connection.highlight(color)
+          end
+        end
+      end
+    end
+  end
 
 end
 
+Shoes.app do
+  gui = AppSupport.new(self)                                               # Initializing of support class
+  background white                                                              # Set up main background
 
+  @set_of_unique_routes = []                                                    # Initializing of array for storring unique ways
+  @current_algorithm = "Not chosen"
 
-def read_file(file_name)
-  edges = []
-  collector = []
+  # Main toolbox
+  flow :width => 1.0 do
 
-  File.readlines(file_name).each do |line|
-    collector << line.chomp.split(/\s+/)
+    # Open file button
+    background rgb(221, 221, 221)
+    stack :width => 0.5 do
+      flow do
+        @button_open_file = button "Open file"
+        @opened_file = para " - "
+      end
+    end
+
+    # Statistics
+    stack :width => 0.5 do
+      flow do
+        para "General: "
+        para "connections: "
+        @number_of_connections = para "0"
+        para "routers: "
+        @number_of_routers     = para "0"
+      end
+    end
   end
 
-  n = collector[0][0].to_i
-  m = collector[0][1].to_i
-  collector.shift
-
-  collector.each do |edge|
-    edges << Edge.new(edge[0], edge[1], edge[2])
-    edges << Edge.new(edge[1], edge[0], edge[2])
+  stack :width => 0.7 do
+    @button_open_file.click do
+      @connections, @routers, file_name = gui.read_file
+      @number_of_connections.text = @connections.size
+      @number_of_routers.text     = @routers.size
+      @opened_file.text           = file_name
+    end
   end
 
-  return n, m, edges
-end
+  stack :width => 0.3, margin: 10 do
+    background white
 
-v = 0 # Start point
-t = 0 # Destination point
-n = 0 # Edges
-m = 0 # Points
-e = [] # List of edges
+    flow margin_top: 10 do
+      background rgb(221, 221, 221)
+      caption "Controls"
+      flow do
+        para "Start vertex: "
+        @start_vertex = edit_line :width => 30
+      end
 
-puts "==================================="
-puts "Finding unique pathes in graph"
-puts "-----------------------------------"
-puts "Algorithms: Wave alg., Bellman-Ford"
-puts "-----------------------------------"
-puts "Authors: R. Kaporin | A. Kogulko"
-puts "==================================="
-print "Enter path to file >> "; file_path = gets.chomp!
+      flow do
+        para "Finish vertex: "
+        @finish_vertex = edit_line :width => 30
+      end
 
-loop do
-  n, m, e = read_file(file_path)
+      flow do
+        flow do
+        para "Choose algorithm:"
+        list_box items: ["Wave algorithm", "Bellman-Ford algorithm", "Ant algorithm"],
+        width: 195, choose: "Wave algorithm" do |list|
+            @current_algorithm = list.text
+        end
 
-  print "Input start end finish point >> "
-  v, t = gets.split(/\s+/)
+      end
 
-  puts "Routers #{n}, Edges #{m}"
-  e.each do |edge|
-    puts "Edge (#{edge.a}) -> (#{edge.b})  = cost #{edge.cost}"
+        @process_button = button "Search"
+        @restore_graph_button = button "Restore"
+
+        # Restoring graph to its first state on the map
+
+        @restore_graph_button.click do
+          @connections.each { |connection| connection.hide }
+          @result.clear
+          @used_algorith.text = "-"
+        gui.draw_graph(@connections, @routers)
+        end
+      end
+
+      flow margin_top: 10 do
+        flow do
+          para "Algorithm: "
+          @used_algorith = para "-"
+        end
+        flow do
+          caption "Results"
+          @result = stack { para "-" }
+        end
+      end
+
+
+      # This button starts proccess of finding unique routes
+      @process_button.click do
+        # Empty previous results
+        @result.clear
+
+        # Check users input
+        if @start_vertex.text.to_s.empty? or @finish_vertex.text.to_s.empty?
+          alert("Some value is wrong!")
+        else
+          # If at's ok, prepare map.
+
+          @connections.each { |connection| connection.hide }  # Hide all exiting connections
+          connections = @connections.clone                    # Create copy of all connections
+
+
+          ### There should be a trigger for chosing algorithm
+          case @current_algorithm
+          #
+          when "Bellman-Ford algorithm"
+          @used_algorith.text = "Bellman-Ford algorithm"
+          @costs, @set_of_unique_routes = BellmanFord.search(@routers.size,
+                                                             connections,
+                                                             @start_vertex.text.to_i,
+                                                             @finish_vertex.text.to_i)
+          when "Wave algorithm"
+          @used_algorith.text = "Wave algorithm"
+          @costs, @set_of_unique_routes = WaveAlgorithm.search(connections,
+                                                             @start_vertex.text.to_i,
+                                                             @finish_vertex.text.to_i)
+          when "Ant algorithm"
+          @used_algorith.text = "Ant algorithm"
+          @costs, @set_of_unique_routes = AntAlgorithm.ant_path_search(@routers.size,
+                                                             connections,
+                                                             @start_vertex.text.to_i,
+                                                             @finish_vertex.text.to_i)
+          end
+
+          # If there some solutions - show them
+          if !@set_of_unique_routes.empty?
+            # Draw solutions on the board
+          gui.draw_set(@set_of_unique_routes, @connections, @routers)
+          #gui.draw_set(@set_of_unique_routes, @connections, @routers)
+            # Show solutions in text form
+            @result.append {"Founded results"}
+            @set_of_unique_routes.zip(@costs).each do |path, cost|
+              @result.append do
+                para "Path #{path.join('-')} has cost: #{cost} "
+              end
+            end
+          else
+            alert("No paths found!")
+          end
+
+        end
+      end
+    end
   end
-
-  puts "\n=========================================================\n"
-  puts "Wave Algorithm"
-  costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  puts "=========================================================\n"
-
-  puts "\n=========================================================\n"
-  puts "Bellman - Ford Algorithm"
-  costs, ways = BellmanFord.search(n, e.dup, v.to_i, t.to_i)
-
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  puts "=========================================================\n"
-
-  puts "\n=========================================================\n"
-  puts "Ant Algorithm"
-  costs, ways =  AntAlgorithm.ant_path_search(m, e, v.to_i, t.to_i)
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  # if ways
-  #   ways.each_with_index do | array, index|
-  #     puts "Path #{array.inspect} has cost #{costs[index]}"
-  #   end
-  # else
-  #   puts "Path not found!"
-  # end
-  puts "=========================================================\n"
 end

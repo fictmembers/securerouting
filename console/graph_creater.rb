@@ -16,7 +16,7 @@ puts "Note! All connections will be two-way."
 
 print "Number of vertexes (V) >> "; V = gets.to_i
 print "Number of edges (E) >> "; E = gets.to_i
-print "File to save >> "; file_name = gets.chomp.to_s
+print "File to save >> "; file_name = gets
 
 file = File.open(file_name, 'w')
 file.write("#{V} #{E}\n")
