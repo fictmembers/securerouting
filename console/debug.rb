@@ -430,45 +430,45 @@ puts "==================================="
 print "Enter path to file >> "; file_path = gets.chomp!
 
 loop do
-  n, m, e = read_file(file_path)
+  require 'benchmark'
 
+  n, m, e = read_file(file_path)
+  costs, ways = [], []
   print "Input start end finish point >> "
   v, t = gets.split(/\s+/)
 
   puts "Routers #{n}, Edges #{m}"
-  e.each do |edge|
-    puts "Edge (#{edge.a}) -> (#{edge.b})  = cost #{edge.cost}"
-  end
-
-  puts "\n=========================================================\n"
-  puts "Wave Algorithm"
-  costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  puts "=========================================================\n"
-
-  puts "\n=========================================================\n"
-  puts "Bellman - Ford Algorithm"
-  costs, ways = BellmanFord.search(n, e.dup, v.to_i, t.to_i)
-
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  puts "=========================================================\n"
-
-  puts "\n=========================================================\n"
-  puts "Ant Algorithm"
-  costs, ways =  AntAlgorithm.ant_path_search(m, e, v.to_i, t.to_i)
-  ways.each_with_index do |way, index|
-    puts "Path #{index} #{way} has cost #{costs[index]}"
-  end
-  # if ways
-  #   ways.each_with_index do | array, index|
-  #     puts "Path #{array.inspect} has cost #{costs[index]}"
-  #   end
-  # else
-  #   puts "Path not found!"
+  # e.each do |edge|
+  #   puts "Edge (#{edge.a}) -> (#{edge.b})  = cost #{edge.cost}"
   # end
-  puts "=========================================================\n"
+
+  Benchmark.bm do |bm|
+    puts "\n=========================================================\n"
+    puts "Wave Algorithm"
+    bm.report('Wave Algorithm') do
+      costs, ways = WaveAlgorithm.search(e.dup, v.to_i, t.to_i)
+    end
+    ways.each_with_index do |way, index|
+      puts "Path #{index} #{way} has cost #{costs[index]}"
+    end
+    puts "=========================================================\n"
+    puts "\n=========================================================\n"
+    puts "Bellman - Ford Algorithm"
+    bm.report('Bellman - Ford Algorithm') do
+      costs, ways = BellmanFord.search(n, e.dup, v.to_i, t.to_i)
+    end
+    ways.each_with_index do |way, index|
+      puts "Path #{index} #{way} has cost #{costs[index]}"
+    end
+    puts "=========================================================\n"
+    puts "\n=========================================================\n"
+    puts "Ant Algorithm"
+    bm.report('Bellman - Ford Algorithm') do
+      costs, ways =  AntAlgorithm.ant_path_search(m, e, v.to_i, t.to_i)
+    end
+    ways.each_with_index do |way, index|
+      puts "Path #{index} #{way} has cost #{costs[index]}"
+    end
+    puts "=========================================================\n"
+  end
 end
